@@ -1,5 +1,9 @@
-# GarageAutomationRaspberryPi
-Automate my garage using a Raspberry Pi 3 B+
+# Overview
+Automate your garage using a Raspberry Pi 3 B+
+
+I got tired of leaving my garage opened by mistake overnight a few times. Not only that is not safe, but also it's an open invitation for someone driving by to come in and break into the house.  To solve this problem, I used the new Raspberry Pi 3 B+, an IR Beam Break Sensor, a 2 Channel Relay Module, the Twilio API for SMS messaging and some Python codes.  Now the garage communicates with me via SMS and I can reply back with a text to Open, Close or to check Status.  If the garage stays open past 11:00 pm it will notify me via text, if I don't reply back within 5 minutes, it will automatically close it for me.
+
+Here are the codes to make that happen.  Enjoy it!
 
 ![Garage Automation](https://image.ibb.co/fCrSzS/IMG_4211_2.jpg)
 
