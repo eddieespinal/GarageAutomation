@@ -14,7 +14,7 @@ from twilio.base.exceptions import TwilioRestException
 from dotenv import load_dotenv
 from enum import Enum
 from dateutil import parser
-# from picamera import PiCamera
+import picamera
 import pyimgur
 
 # Setup Environment Variables
@@ -65,10 +65,10 @@ class GarageAutomation():
 
     def captureSendImage(self):
         dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
-        # camera.annotate_text = dateString
-        # camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-        # camera.capture(IMAGE_PATH)
-        os.system("raspistill -o /home/pi/GarageAutomation/image.jpg")
+        with picamera.PiCamera() as camera:
+            camera.annotate_text = dateString
+            camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
+            camera.capture(IMAGE_PATH)
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
 
         doorStatusString = "CLOSED"
