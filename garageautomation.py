@@ -16,7 +16,6 @@ from enum import Enum
 from dateutil import parser
 import picamera
 import pyimgur
-from fractions import Fraction
 
 # Setup Environment Variables
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -69,12 +68,6 @@ class GarageAutomation():
         with picamera.PiCamera() as camera:
             camera.annotate_text = dateString
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-            # Set a framerate of 1/6fps, then set shutter
-            # speed to 6s and ISO to 800
-            camera.framerate = Fraction(1, 6)
-            camera.shutter_speed = 6000000
-            camera.exposure_mode = 'off'
-            camera.iso = 800
             camera.capture(IMAGE_PATH)
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
 
