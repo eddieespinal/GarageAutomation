@@ -32,7 +32,7 @@ GPIO.output(RELAYPIN, GPIO.HIGH)
 
 alarmTriggerTime = "11:00 PM"
 notificationDelayInSeconds = 300 # five minutes in seconds
-
+GARAGE_OPEN_CLOSE_DELAY = 5 # five seconds
 
 
 IMG_WIDTH = 800
@@ -76,6 +76,15 @@ class GarageAutomation():
             doorStatusString = "OPEN"
 
         self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString), uploaded_image.link)
+
+    def sendImageViaSMS(self):
+        dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
+        with picamera.PiCamera() as camera:
+            camera.annotate_text = dateString
+            camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
+            camera.capture(IMAGE_PATH)
+        uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
+        self.sendNotificationsMessage(dateString, uploaded_image.link)
 
     def getDoorStatus(self):
         if (GPIO.input(IRSENSORPIN) == 0):
@@ -144,11 +153,15 @@ class GarageAutomation():
                             # call the close garage command here
                             self.openCloseDoor(DoorStatus.CLOSED)
                             self.sendNotificationsMessage("Executed - Garage Close Command")
+                            time.sleep(GARAGE_OPEN_CLOSE_DELAY)
+                            self.sendImageViaSMS()
 
                         if message.body.lower() == 'open':
                             # call the open garage command here
                             self.openCloseDoor(DoorStatus.OPEN)
                             self.sendNotificationsMessage("Executed - Garage Open Command")
+                            time.sleep(GARAGE_OPEN_CLOSE_DELAY)
+                            self.sendImageViaSMS()
 
                         if message.body.lower() == 'status':
                             # call the garage status command here
@@ -158,9 +171,12 @@ class GarageAutomation():
 
                             self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString))
 
-                        if message.body.lower() == 'photo':
+                        if message.body.lower() == 'status with photo':
                             # take a photo and send it via SMS
                             self.captureSendImage()
+                        
+                        if message.body.lower() == 'reboot':
+                            os.system('sudo shutdown -r now')
 
                         time.sleep(5)
 
