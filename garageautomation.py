@@ -14,6 +14,8 @@ from twilio.base.exceptions import TwilioRestException
 from dotenv import load_dotenv
 from enum import Enum
 from dateutil import parser
+from picamera import PiCamera
+import pyimgur
 
 # Setup Environment Variables
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -29,7 +31,20 @@ GPIO.setup(RELAYPIN, GPIO.OUT)
 GPIO.output(RELAYPIN, GPIO.HIGH)
 
 alarmTriggerTime = "11:00 PM"
-notificationDelayInSeconds = 300 # five minutes
+notificationDelayInSeconds = 300 # five minutes in seconds
+
+
+
+IMG_WIDTH = 800
+IMG_HEIGHT = 600
+IMAGE_PATH = "/home/pi/GarageAutomation/images/image.jpg"
+
+camera = PiCamera()
+
+# initialize imgur 
+# imgur client setup
+CLIENT_ID = os.getenv("IMGUR_CLIENT_ID")
+imgur = pyimgur.Imgur(CLIENT_ID)
 
 class DoorStatus(Enum):
     OPEN = 0 
@@ -47,6 +62,19 @@ class GarageAutomation():
     def reset(self):
         self.lastSentNoticationTime = -1
         self.doorStatus = DoorStatus.UNKNOWN
+
+    def captureSendImage(self):
+        dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
+        camera.annotate_text = dateString
+        camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
+        camera.capture(IMAGE_PATH)
+        uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
+
+        doorStatusString = "CLOSED"
+        if self.doorStatus == DoorStatus.OPEN:
+            doorStatusString = "OPEN"
+
+        self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString), uploaded_image.link)
 
     def getDoorStatus(self):
         if (GPIO.input(IRSENSORPIN) == 0):
@@ -67,9 +95,12 @@ class GarageAutomation():
         time.sleep(1)
         GPIO.output(RELAYPIN, GPIO.HIGH)
 
-    def sendNotificationsMessage(self, messageBody):
+    def sendNotificationsMessage(self, messageBody, media_url=None):
         try: 
-            self.client.messages.create(from_=self.fromNumber, to=self.toNumber, body=messageBody)
+            if media_url not None:
+                self.client.messages.create(from_=self.fromNumber, to=self.toNumber, body=messageBody, media_url=media_url)
+            else:
+                self.client.messages.create(from_=self.fromNumber, to=self.toNumber, body=messageBody)
         except TwilioRestException as e: 
             print(e)
 
@@ -125,6 +156,10 @@ class GarageAutomation():
                                 doorStatusString = "OPEN"
 
                             self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString))
+
+                        if message.body.lower() == 'photo':
+                            # take a photo and send it via SMS
+                            self.captureSendImage()
 
                         time.sleep(5)
 
