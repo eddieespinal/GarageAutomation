@@ -14,7 +14,7 @@ from twilio.base.exceptions import TwilioRestException
 from dotenv import load_dotenv
 from enum import Enum
 from dateutil import parser
-from picamera import PiCamera
+# from picamera import PiCamera
 import pyimgur
 
 # Setup Environment Variables
@@ -37,9 +37,9 @@ notificationDelayInSeconds = 300 # five minutes in seconds
 
 IMG_WIDTH = 800
 IMG_HEIGHT = 600
-IMAGE_PATH = "/home/pi/GarageAutomation/images/image.jpg"
+IMAGE_PATH = "/home/pi/GarageAutomation/image.jpg"
 
-camera = PiCamera()
+# camera = PiCamera()
 
 # initialize imgur 
 # imgur client setup
@@ -65,9 +65,10 @@ class GarageAutomation():
 
     def captureSendImage(self):
         dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
-        camera.annotate_text = dateString
-        camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-        camera.capture(IMAGE_PATH)
+        # camera.annotate_text = dateString
+        # camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
+        # camera.capture(IMAGE_PATH)
+        os.system("raspstill -vf -o home/pi/GarageAutomation/image.jpg")
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
 
         doorStatusString = "CLOSED"
