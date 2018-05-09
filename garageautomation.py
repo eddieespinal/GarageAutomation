@@ -97,7 +97,7 @@ class GarageAutomation():
 
     def sendNotificationsMessage(self, messageBody, media_url=None):
         try: 
-            if media_url not None:
+            if media_url is not None:
                 self.client.messages.create(from_=self.fromNumber, to=self.toNumber, body=messageBody, media_url=media_url)
             else:
                 self.client.messages.create(from_=self.fromNumber, to=self.toNumber, body=messageBody)
