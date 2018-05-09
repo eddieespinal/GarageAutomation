@@ -68,7 +68,7 @@ class GarageAutomation():
         # camera.annotate_text = dateString
         # camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
         # camera.capture(IMAGE_PATH)
-        os.system("raspistill -vf -o home/pi/GarageAutomation/image.jpg")
+        os.system("raspistill -o /home/pi/GarageAutomation/image.jpg")
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
 
         doorStatusString = "CLOSED"
