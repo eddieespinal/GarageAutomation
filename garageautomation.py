@@ -201,6 +201,10 @@ class GarageAutomation():
 
         except TwilioRestException as e:
             print(e)
+            pass
+        except:
+            print("Unexpected error")
+            pass
 
     def logStatus(self, garageStatus):
         with open("garage_status_log.csv", "a") as log:
