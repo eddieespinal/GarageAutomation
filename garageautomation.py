@@ -79,16 +79,16 @@ class GarageAutomation():
 
     def configureCamera(self, camera):
         camera.annotate_foreground = Color('white')
-            camera.annotate_background = Color('black')
-            camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-            if self.doorStatus == DoorStatus.CLOSED:
-                camera.contrast = 100
-                camera.brightness = 80
-                camera.framerate = Fraction(1, 6)
-                camera.iso = 800
-                camera.exposure_mode = 'night'
-                camera.shutter_speed = 6000000
-                time.sleep(5)
+        camera.annotate_background = Color('black')
+        camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
+        if self.doorStatus == DoorStatus.CLOSED:
+            camera.contrast = 100
+            camera.brightness = 80
+            camera.framerate = Fraction(1, 6)
+            camera.iso = 800
+            camera.exposure_mode = 'night'
+            camera.shutter_speed = 6000000
+            time.sleep(5)
 
     def sendImageViaSMS(self):
         dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
