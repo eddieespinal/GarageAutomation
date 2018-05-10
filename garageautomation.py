@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from enum import Enum
 from dateutil import parser
 import picamera
+from picamera import Color
 import pyimgur
 
 # Setup Environment Variables
@@ -64,10 +65,12 @@ class GarageAutomation():
         dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
         with picamera.PiCamera() as camera:
             camera.annotate_text = dateString
+            camera.annotate_foreground = Color('white')
+            camera.annotate_background = Color('black')
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
             camera.start_preview()
             # Camera warm-up time
-            time.sleep(2)
+            time.sleep(3)
             camera.capture(IMAGE_PATH)
             camera.stop_preview()
             
@@ -196,10 +199,13 @@ class GarageAutomation():
             sleep(1)
 
     def run(self):
-        while (True):
-            self.getDoorStatus()
-            self.checkIfGarageDoorIsOpenedPastTriggerTime()
-            self.listenForSMSCommand()
+        try:
+            while (True):
+                self.getDoorStatus()
+                self.checkIfGarageDoorIsOpenedPastTriggerTime()
+                self.listenForSMSCommand()
+        finally:
+            GPIO.cleanup() # ensures a clean exit
 
 
 
