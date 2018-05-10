@@ -176,7 +176,7 @@ class GarageAutomation():
 
                             self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString))
 
-                        if message.body.lower() == 'status with photo':
+                        if message.body.lower() == 'photo':
                             # take a photo and send it via SMS
                             self.captureSendImage()
                         
