@@ -65,7 +65,6 @@ class GarageAutomation():
         with picamera.PiCamera() as camera:
             camera.annotate_text = dateString
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-            camera.awb_mode = 'off'
             camera.start_preview()
             # Camera warm-up time
             time.sleep(2)
