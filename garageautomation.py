@@ -68,7 +68,11 @@ class GarageAutomation():
             camera.annotate_foreground = Color('white')
             camera.annotate_background = Color('black')
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-            camera.contrast = 50
+            if self.doorStatus == DoorStatus.CLOSED:
+                camera.contrast = 100
+                camera.brightness = 80
+                camera.ISO = 800
+                camera.shutter = 2000000
             camera.capture(IMAGE_PATH)
             
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
@@ -86,6 +90,11 @@ class GarageAutomation():
             camera.annotate_foreground = Color('white')
             camera.annotate_background = Color('black')
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
+            if self.doorStatus == DoorStatus.CLOSED:
+                camera.contrast = 100
+                camera.brightness = 80
+                camera.ISO = 800
+                camera.shutter = 2000000
             camera.capture(IMAGE_PATH)
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
         self.sendNotificationsMessage(dateString, uploaded_image.link)
