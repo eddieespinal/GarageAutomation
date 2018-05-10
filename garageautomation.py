@@ -176,7 +176,12 @@ class GarageAutomation():
                             self.captureSendImage()
                         
                         if message.body.lower() == 'reboot':
+                            self.sendNotificationsMessage("Executed - Reboot Command")
                             os.system('sudo shutdown -r now')
+
+                        if message.body.lower() == 'shutdown':
+                            self.sendNotificationsMessage("Executed - Shutdown Command")
+                            os.system('sudo shutdown -h now')
 
                         time.sleep(5)
 
