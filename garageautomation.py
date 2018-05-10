@@ -66,17 +66,7 @@ class GarageAutomation():
         dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
         with picamera.PiCamera() as camera:
             camera.annotate_text = dateString
-            camera.annotate_foreground = Color('white')
-            camera.annotate_background = Color('black')
-            camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-            if self.doorStatus == DoorStatus.CLOSED:
-                camera.contrast = 100
-                camera.brightness = 80
-                camera.framerate = Fraction(1, 6)
-                camera.iso = 800
-                camera.exposure_mode = 'night'
-                camera.shutter_speed = 6000000
-                time.sleep(5)
+            self.configureCamera(camera)
             camera.capture(IMAGE_PATH)
             
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
@@ -87,11 +77,8 @@ class GarageAutomation():
 
         self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString), uploaded_image.link)
 
-    def sendImageViaSMS(self):
-        dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
-        with picamera.PiCamera() as camera:
-            camera.annotate_text = dateString
-            camera.annotate_foreground = Color('white')
+    def configureCamera(self, camera):
+        camera.annotate_foreground = Color('white')
             camera.annotate_background = Color('black')
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
             if self.doorStatus == DoorStatus.CLOSED:
@@ -102,6 +89,12 @@ class GarageAutomation():
                 camera.exposure_mode = 'night'
                 camera.shutter_speed = 6000000
                 time.sleep(5)
+
+    def sendImageViaSMS(self):
+        dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
+        with picamera.PiCamera() as camera:
+            camera.annotate_text = dateString
+            self.configureCamera(camera)
             camera.capture(IMAGE_PATH)
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
         self.sendNotificationsMessage(dateString, uploaded_image.link)
