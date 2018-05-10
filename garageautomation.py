@@ -66,12 +66,12 @@ class GarageAutomation():
             camera.annotate_text = dateString
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
             camera.start_preview()
-            for i in range(5):
-                sleep(5)
-                camera.capture('/home/pi/Desktop/image%s.jpg' % i)
+            # Camera warm-up time
+            time.sleep(2)
+            camera.capture(IMAGE_PATH)
             camera.stop_preview()
-            #camera.capture(IMAGE_PATH)
-        uploaded_image = imgur.upload_image('/home/pi/Desktop/image4.jpg', title=dateString)
+            
+        uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
 
         doorStatusString = "CLOSED"
         if self.doorStatus == DoorStatus.OPEN:
