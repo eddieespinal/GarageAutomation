@@ -16,6 +16,7 @@ from enum import Enum
 from dateutil import parser
 import picamera
 from picamera import Color
+from fractions import Fraction
 import pyimgur
 
 # Setup Environment Variables
@@ -71,8 +72,11 @@ class GarageAutomation():
             if self.doorStatus == DoorStatus.CLOSED:
                 camera.contrast = 100
                 camera.brightness = 80
-                camera.ISO = 800
-                camera.shutter = 2000000
+                camera.framerate = Fraction(1, 6)
+                camera.iso = 800
+                camera.exposure_mode = 'off'
+                camera.shutter_speed = 6000000
+                time.sleep(10)
             camera.capture(IMAGE_PATH)
             
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
