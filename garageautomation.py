@@ -34,9 +34,9 @@ GPIO.output(RELAYPIN, GPIO.HIGH)
 alarmTriggerTime = "11:00 PM"
 notificationDelayInSeconds = 300 # five minutes in seconds
 GARAGE_OPEN_CLOSE_DELAY = 1 # five seconds
-
-IMG_WIDTH = 640
-IMG_HEIGHT = 480
+2592, 1944
+IMG_WIDTH = 2592
+IMG_HEIGHT = 1944
 IMAGE_PATH = "/home/pi/GarageAutomation/image.jpg"
 
 # initialize imgur 
@@ -68,11 +68,7 @@ class GarageAutomation():
             camera.annotate_foreground = Color('white')
             camera.annotate_background = Color('black')
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-            # camera.start_preview()
-            # Camera warm-up time
-            # time.sleep(3)
             camera.capture(IMAGE_PATH)
-            # camera.stop_preview()
             
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
 
@@ -86,6 +82,8 @@ class GarageAutomation():
         dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
         with picamera.PiCamera() as camera:
             camera.annotate_text = dateString
+            camera.annotate_foreground = Color('white')
+            camera.annotate_background = Color('black')
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
             camera.capture(IMAGE_PATH)
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
