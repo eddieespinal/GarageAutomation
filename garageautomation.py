@@ -87,7 +87,7 @@ class GarageAutomation():
             camera.framerate = Fraction(1, 6)
             camera.iso = 800
             camera.exposure_mode = 'night'
-            camera.shutter_speed = 6000000
+            camera.shutter_speed = 4000000
             time.sleep(5)
 
     def sendImageViaSMS(self):
