@@ -68,11 +68,11 @@ class GarageAutomation():
             camera.annotate_foreground = Color('white')
             camera.annotate_background = Color('black')
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
-            camera.start_preview()
+            # camera.start_preview()
             # Camera warm-up time
-            time.sleep(3)
+            # time.sleep(3)
             camera.capture(IMAGE_PATH)
-            camera.stop_preview()
+            # camera.stop_preview()
             
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
 
@@ -177,6 +177,7 @@ class GarageAutomation():
                             self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString))
 
                         if message.body.lower() == 'photo':
+                            self.sendNotificationsMessage("Requesting photo, please wait...")
                             # take a photo and send it via SMS
                             self.captureSendImage()
                         
