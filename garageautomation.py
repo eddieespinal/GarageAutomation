@@ -34,10 +34,10 @@ GPIO.output(RELAYPIN, GPIO.HIGH)
 
 alarmTriggerTime = "11:00 PM"
 notificationDelayInSeconds = 300 # five minutes in seconds
-GARAGE_OPEN_CLOSE_DELAY = 1 # five seconds
+GARAGE_OPEN_CLOSE_DELAY = 5 # five seconds
 
-IMG_WIDTH = 1280
-IMG_HEIGHT = 720
+IMG_WIDTH = 640
+IMG_HEIGHT = 480
 IMAGE_PATH = "/home/pi/GarageAutomation/image.jpg"
 
 # initialize imgur 
@@ -74,9 +74,9 @@ class GarageAutomation():
                 camera.brightness = 80
                 camera.framerate = Fraction(1, 6)
                 camera.iso = 800
-                camera.exposure_mode = 'off'
+                camera.exposure_mode = 'night'
                 camera.shutter_speed = 6000000
-                time.sleep(10)
+                time.sleep(5)
             camera.capture(IMAGE_PATH)
             
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
@@ -97,8 +97,11 @@ class GarageAutomation():
             if self.doorStatus == DoorStatus.CLOSED:
                 camera.contrast = 100
                 camera.brightness = 80
-                camera.ISO = 800
-                camera.shutter = 2000000
+                camera.framerate = Fraction(1, 6)
+                camera.iso = 800
+                camera.exposure_mode = 'night'
+                camera.shutter_speed = 6000000
+                time.sleep(5)
             camera.capture(IMAGE_PATH)
         uploaded_image = imgur.upload_image(IMAGE_PATH, title=dateString)
         self.sendNotificationsMessage(dateString, uploaded_image.link)
@@ -230,5 +233,3 @@ if __name__ == "__main__":
     # End program cleanly with keyboard  
     except KeyboardInterrupt:  
         print "Quit"  
-        # Reset GPIO settings  
-        GPIO.cleanup() 
