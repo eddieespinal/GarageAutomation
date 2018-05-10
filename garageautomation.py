@@ -34,8 +34,8 @@ alarmTriggerTime = "11:00 PM"
 notificationDelayInSeconds = 300 # five minutes in seconds
 GARAGE_OPEN_CLOSE_DELAY = 1 # five seconds
 
-IMG_WIDTH = 640
-IMG_HEIGHT = 480
+IMG_WIDTH = 1024
+IMG_HEIGHT = 640
 IMAGE_PATH = "/home/pi/GarageAutomation/image.jpg"
 
 # initialize imgur 
@@ -65,6 +65,7 @@ class GarageAutomation():
         with picamera.PiCamera() as camera:
             camera.annotate_text = dateString
             camera.resolution = (IMG_WIDTH, IMG_HEIGHT)
+            camera.awb_mode = 'off'
             camera.start_preview()
             # Camera warm-up time
             time.sleep(2)
