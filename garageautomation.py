@@ -34,8 +34,8 @@ alarmTriggerTime = "11:00 PM"
 notificationDelayInSeconds = 300 # five minutes in seconds
 GARAGE_OPEN_CLOSE_DELAY = 1 # five seconds
 
-IMG_WIDTH = 1024
-IMG_HEIGHT = 640
+IMG_WIDTH = 640
+IMG_HEIGHT = 480
 IMAGE_PATH = "/home/pi/GarageAutomation/image.jpg"
 
 # initialize imgur 
