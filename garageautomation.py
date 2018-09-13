@@ -58,6 +58,12 @@ class GarageAutomation():
         self.doorStatus = DoorStatus.UNKNOWN
         self.lastSentNoticationTime = -1
 
+        # Send a SMS when the system starts. This will be used when automaticaly restarting the Pi to make sure is working
+        self.sendSystemStartedNotification()
+
+    def sendSystemStartedNotification(self):
+        self.sendNotificationsMessage("Garage Automation Started")
+
     def reset(self):
         self.lastSentNoticationTime = -1
         self.doorStatus = DoorStatus.UNKNOWN
