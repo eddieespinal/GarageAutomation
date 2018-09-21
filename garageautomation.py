@@ -19,6 +19,9 @@ from picamera import Color
 from fractions import Fraction
 import pyimgur
 
+import paho.mqtt.client as mqtt
+
+
 # Setup Environment Variables
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
@@ -45,6 +48,8 @@ IMAGE_PATH = "/home/pi/GarageAutomation/image.jpg"
 CLIENT_ID = os.getenv("IMGUR_CLIENT_ID")
 imgur = pyimgur.Imgur(CLIENT_ID)
 
+validCommands = ["open", "close", "status", "photo", "reboot", "shutdown"]
+
 class DoorStatus(Enum):
     OPEN = 0 
     CLOSED = 1 
@@ -58,11 +63,78 @@ class GarageAutomation():
         self.doorStatus = DoorStatus.UNKNOWN
         self.lastSentNoticationTime = -1
 
+        # setup the mqtt client
+        self.mqttClient = mqtt.Client()
+        self.mqttClient.on_message = self.on_message
+        self.mqttClient.on_connect = self.on_connect
+        self.mqttClient.on_disconnect = self.on_disconnect
+        self.mqttClient.username_pw_set(os.getenv("CLOUD_MQTT_USER"), password=os.getenv("CLOUD_MQTT_PASSWORD"))
+        # connect
+        self.mqttClient.connect(os.getenv("CLOUD_MQTT_SERVER"), int(os.getenv("CLOUD_MQTT_PORT")))
+        self.mqttClient.subscribe("garage/command/#", qos=1)
+        #self.mqttClient.loop_start()
+
         # Send a SMS when the system starts. This will be used when automaticaly restarting the Pi to make sure is working
         self.sendSystemStartedNotification()
 
+    # # MQTT functions
+    def on_connect(self, client, userdata, flags, rc):
+        print("MQTT connected with code %d." % (rc))
+
+    def on_disconnect(self, client, userdata, rc):
+        print("MQTT disconnect: %s" % mqtt.error_string(rc))
+
+    def on_subscribe(self, client, userdata, mid, granted_qos):
+        print("Subscribed: "+str(mid)+" "+str(granted_qos))
+ 
+    def on_message(self, client, userdata, msg):
+        print(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
+        
+        # Grab the command from the payload
+        command = str(msg.payload).lower()
+  
+        # Let's make sure we are not processing invalid commands
+        if command in validCommands:
+            if command == 'close':
+                # call the close garage command here
+                self.openCloseDoor(DoorStatus.CLOSED)
+                self.sendNotificationsMessage("Executed - Garage Close Command")
+                time.sleep(GARAGE_OPEN_CLOSE_DELAY)
+                self.sendImageViaSMS()
+
+            if command == 'open':
+                # call the open garage command here
+                self.openCloseDoor(DoorStatus.OPEN)
+                self.sendNotificationsMessage("Executed - Garage Open Command")
+                time.sleep(GARAGE_OPEN_CLOSE_DELAY)
+                self.sendImageViaSMS()
+
+            if command == 'status':
+                # call the garage status command here
+                doorStatusString = "CLOSED"
+                if self.doorStatus == DoorStatus.OPEN:
+                    doorStatusString = "OPEN"
+
+                self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString))
+
+            if command == 'photo':
+                self.sendNotificationsMessage("Requesting photo, please wait...")
+                # take a photo and send it via SMS
+                self.captureSendImage()
+            
+            if command == 'reboot':
+                self.sendNotificationsMessage("Executed - Reboot Command")
+                os.system('sudo shutdown -r now')
+
+            if command == 'shutdown':
+                self.sendNotificationsMessage("Executed - Shutdown Command")
+                os.system('sudo shutdown -h now')
+
+            time.sleep(5) 
+
     def sendSystemStartedNotification(self):
-        self.sendNotificationsMessage("Garage Automation Started")
+        #self.sendNotificationsMessage("Garage Automation Started")
+        self.logStatus("Garage Automation Started")
 
     def reset(self):
         self.lastSentNoticationTime = -1
@@ -154,63 +226,6 @@ class GarageAutomation():
         elif dt.tm_hour > alarmTriggerTimeObject.hour:
             print("Resetting stored flags")
             self.reset()
-       
-
-    def listenForSMSCommand(self):
-        try:
-            messages = self.client.messages.list(to=self.fromNumber,from_=self.toNumber,date_sent=datetime.datetime.utcnow())
-
-            for message in messages:
-                print "Message Body: {} - Date: {}".format(message.body.lower(), message.date_sent)
-                if message.status == 'received':
-                # select only recently sent messages were time now less time sent is very small
-                # (removing an amount from datetime.utcnow() allows the message to be retreived for on a few seconds.
-                    date_sent = message.date_sent.strftime('%a, %d %b %Y %H:%M:%S+0000')
-                    if (time.mktime(datetime.datetime.utcnow().timetuple())-21602) < email.utils.mktime_tz(email.utils.parsedate_tz(date_sent)):
-
-                        if message.body.lower() == 'close':
-                            # call the close garage command here
-                            self.openCloseDoor(DoorStatus.CLOSED)
-                            self.sendNotificationsMessage("Executed - Garage Close Command")
-                            time.sleep(GARAGE_OPEN_CLOSE_DELAY)
-                            self.sendImageViaSMS()
-
-                        if message.body.lower() == 'open':
-                            # call the open garage command here
-                            self.openCloseDoor(DoorStatus.OPEN)
-                            self.sendNotificationsMessage("Executed - Garage Open Command")
-                            time.sleep(GARAGE_OPEN_CLOSE_DELAY)
-                            self.sendImageViaSMS()
-
-                        if message.body.lower() == 'status':
-                            # call the garage status command here
-                            doorStatusString = "CLOSED"
-                            if self.doorStatus == DoorStatus.OPEN:
-                                doorStatusString = "OPEN"
-
-                            self.sendNotificationsMessage("The garage door is currently {}".format(doorStatusString))
-
-                        if message.body.lower() == 'photo':
-                            self.sendNotificationsMessage("Requesting photo, please wait...")
-                            # take a photo and send it via SMS
-                            self.captureSendImage()
-                        
-                        if message.body.lower() == 'reboot':
-                            self.sendNotificationsMessage("Executed - Reboot Command")
-                            os.system('sudo shutdown -r now')
-
-                        if message.body.lower() == 'shutdown':
-                            self.sendNotificationsMessage("Executed - Shutdown Command")
-                            os.system('sudo shutdown -h now')
-
-                        time.sleep(5)
-
-        except TwilioRestException as e:
-            print(e)
-            pass
-        except:
-            print("Unexpected error")
-            pass
 
     def logStatus(self, garageStatus):
         with open("garage_status_log.csv", "a") as log:
@@ -219,10 +234,14 @@ class GarageAutomation():
 
     def run(self):
         try:
-            while (True):
+            # Continue the network loop, exit when an error occurs
+            rc = 0
+            while rc == 0:
+                rc = self.mqttClient.loop()
                 self.getDoorStatus()
                 self.checkIfGarageDoorIsOpenedPastTriggerTime()
-                self.listenForSMSCommand()
+
+            print("rc: " + str(rc)) 
         finally:
             GPIO.cleanup() # ensures a clean exit
 
