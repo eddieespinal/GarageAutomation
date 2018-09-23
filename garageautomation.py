@@ -62,6 +62,7 @@ class GarageAutomation():
         self.fromNumber = os.getenv("TWILIO_NUMBER")
         self.doorStatus = DoorStatus.UNKNOWN
         self.lastSentNoticationTime = -1
+        self.garageAutomaticallyClosed = False
 
         # setup the mqtt client
         self.mqttClient = mqtt.Client()
@@ -72,7 +73,6 @@ class GarageAutomation():
         # connect
         self.mqttClient.connect(os.getenv("CLOUD_MQTT_SERVER"), int(os.getenv("CLOUD_MQTT_PORT")))
         self.mqttClient.subscribe("garage/command/#", qos=1)
-        #self.mqttClient.loop_start()
 
         # Send a SMS when the system starts. This will be used when automaticaly restarting the Pi to make sure is working
         self.sendSystemStartedNotification()
@@ -139,6 +139,7 @@ class GarageAutomation():
     def reset(self):
         self.lastSentNoticationTime = -1
         self.doorStatus = DoorStatus.UNKNOWN
+        self.garageAutomaticallyClosed = False
 
     def captureSendImage(self):
         dateString = datetime.datetime.now().strftime("%m-%d-%Y %-I:%M:%S %p")
@@ -210,7 +211,7 @@ class GarageAutomation():
         dt = datetime.datetime.now().timetuple()
         alarmTriggerTimeObject = parser.parse(alarmTriggerTime) # returns 23:00 in 24hr format
 
-        if now == alarmTriggerTime and self.doorStatus == DoorStatus.OPEN:
+        if (dt.tm_hour == alarmTriggerTimeObject.hour and dt.tm_min == alarmTriggerTimeObject.minute) and self.doorStatus == DoorStatus.OPEN:
             if self.lastSentNoticationTime < 0 :
                 print("Warning, Garage Doors are Opened Past Trigger Time")
                 self.lastSentNoticationTime = time.time()
@@ -218,12 +219,13 @@ class GarageAutomation():
                 self.logStatus("OPEN")
 
         # If the notification was already sent and the garage still opened, let's wait 5 minutes before closing the garage automatically.
-        if (dt.tm_hour == alarmTriggerTimeObject.hour and dt.tm_min > alarmTriggerTimeObject.minute) and (time.time() - self.lastSentNoticationTime >= notificationDelayInSeconds) and self.doorStatus == DoorStatus.OPEN:
+        if (dt.tm_hour == alarmTriggerTimeObject.hour and dt.tm_min > alarmTriggerTimeObject.minute) and (time.time() - self.lastSentNoticationTime > notificationDelayInSeconds) and self.doorStatus == DoorStatus.OPEN and not self.garageAutomaticallyClosed:
             print("Automatically closing the garage")
             self.logStatus("Automatically closing the garage")
             self.openCloseDoor(DoorStatus.CLOSED)
             self.sendNotificationsMessage("The garage door was automatically closed at {}".format(now))
-        elif dt.tm_hour > alarmTriggerTimeObject.hour:
+            self.garageAutomaticallyClosed = True
+        elif dt.tm_hour > alarmTriggerTimeObject.hour and self.lastSentNoticationTime > 0:
             print("Resetting stored flags")
             self.reset()
 
@@ -240,11 +242,10 @@ class GarageAutomation():
                 rc = self.mqttClient.loop()
                 self.getDoorStatus()
                 self.checkIfGarageDoorIsOpenedPastTriggerTime()
-
+                sleep(1)
             print("rc: " + str(rc)) 
         finally:
             GPIO.cleanup() # ensures a clean exit
-
 
 
 if __name__ == "__main__":
